@@ -1,34 +1,36 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 import css from './Modal.module.css';
 
-export class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
+export const Modal = ({ closeModal, modalSrc, alt }) => {
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  handleKeyDown = event => {
+  const handleKeyDown = event => {
     if (event.code === 'Escape') {
-      this.props.closeModal();
+      closeModal();
     }
   };
 
-  overayClick = event => {
+  const overayClick = event => {
     if (event.target === event.currentTarget) {
-      this.props.closeModal();
+      closeModal();
     }
   };
 
-  render() {
-    return (
-      <div className={css.Overlay} onClick={this.overayClick}>
-        <div className={css.Modal}>
-          <img src={this.props.modalSrc} alt={this.props.alt} />
-        </div>
+  return (
+    <div className={css.Overlay} onClick={overayClick}>
+      <div className={css.Modal}>
+        <img src={modalSrc} alt={alt} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
