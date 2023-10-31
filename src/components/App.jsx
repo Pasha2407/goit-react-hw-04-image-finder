@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { Searchbar } from './searchbar/Searchbar';
 import { ImageGallery } from './image_gallery/ImageGallery';
 import { Loader } from './loader/Loader';
@@ -6,72 +6,61 @@ import { Button } from './button/Button';
 import { api } from './API';
 import css from './App.module.css';
 
-export class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    page: 1,
-    isLoading: false,
-    error: null,
-    loadMore: false,
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [loadMore, setLoadMore] = useState(false);
+
+  const onSubmit = event => {
+    setQuery(event);
+    setImages([]);
+    setPage(1);
   };
 
-  onSubmit = event => {
-    this.setState({ query: event, images: [], page: 1 });
-  };
+  useEffect(() => {
+    if (!query) return;
+    fetchImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, page]);
 
-  componentDidUpdate(_, prevState) {
-    if (
-      this.state.query !== prevState.query ||
-      this.state.page !== prevState.page
-    ) {
-      this.fetchImages();
-    }
-  }
-
-  fetchImages = async () => {
+  const fetchImages = async () => {
     try {
-      this.setState({
-        isLoading: true,
-      });
-      const { data } = await api(this.state.query, this.state.page);
-      this.setState(prevState => ({
-        images: [...prevState.images, ...data.hits],
-        loadMore: true,
-      }));
-      if (this.state.page >= Math.ceil(data.totalHits / 12)) {
-        this.setState({
-          loadMore: false,
-        });
+      setIsLoading(true);
+      const { data } = await api(query, page);
+      setImages([...images, ...data.hits]);
+      setLoadMore(true);
+      if (page >= Math.ceil(data.totalHits / 12)) {
+        setLoadMore(false);
       }
     } catch (error) {
-      this.setState({ error: error.message });
+      setError(error.message);
     } finally {
-      this.setState({
-        isLoading: false,
-      });
+      setIsLoading(false);
     }
   };
 
-  nextPage = () => {
-    this.setState({ page: this.state.page + 1 });
+  const nextPage = () => {
+    setPage(page + 1);
   };
 
-  render() {
-    return (
-      <div className={css.App}>
-        <Searchbar onSubmit={this.onSubmit} />
-        {this.state.error !== null && (
-          <p style={{ color: 'red', margin: '0 auto' }}>
-            SORRY AN ERROR HAS OCCURRED
-            <br />
-            Error name: {this.state.error}
-          </p>
-        )}
-        <ImageGallery imagesData={this.state.images} />
-        {this.state.isLoading && <Loader />}
-        {this.state.loadMore && <Button onClick={this.nextPage} />}
-      </div>
-    );
-  }
-}
+  return (
+    <div className={css.App}>
+      <Searchbar onSubmit={onSubmit} />
+      {error !== null && (
+        <p style={{ color: 'red', margin: '0 auto' }}>
+          SORRY AN ERROR HAS OCCURRED
+          <br />
+          Error name: {error}
+        </p>
+      )}
+      <ImageGallery imagesData={images} />
+      {isLoading && <Loader />}
+      {loadMore && !isLoading && images.length > 0 && (
+        <Button onClick={nextPage} />
+      )}
+    </div>
+  );
+};
