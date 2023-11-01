@@ -22,25 +22,24 @@ export const App = () => {
 
   useEffect(() => {
     if (!query) return;
-    fetchImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, page]);
-
-  const fetchImages = async () => {
-    try {
-      setIsLoading(true);
-      const { data } = await api(query, page);
-      setImages([...images, ...data.hits]);
-      setLoadMore(true);
-      if (page >= Math.ceil(data.totalHits / 12)) {
-        setLoadMore(false);
+    const fetchImages = async () => {
+      try {
+        setIsLoading(true);
+        const { data } = await api(query, page);
+        const newImages = [...images, ...data.hits];
+        setImages(newImages);
+        setLoadMore(true);
+        if (page >= Math.ceil(data.totalHits / 12)) {
+          setLoadMore(false);
+        }
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    fetchImages();
+  }, [query, page]);
 
   const nextPage = () => {
     setPage(page + 1);
