@@ -19,11 +19,6 @@ export const App = () => {
     setImages([]);
     setPage(1);
   };
-  /*Я перемістив fetchImages в середину useEffect
-  але всерівно вибиває warrning 'React Hook useEffect has a missing dependency: 'images'. Either include it or remove the dependency array' 
-  Помилка вибиває через стейт images, тому що він прописаний за межею useEffect
-  Цю проблему можна вирішити якщо вписати images в масив залежностей ефекта, але тоді логіка працює не правельно
-  Тому я рішив вписати 'eslint-disable-next-line' у тіло useEffect*/
 
   useEffect(() => {
     if (!query) return;
@@ -31,8 +26,7 @@ export const App = () => {
       try {
         setIsLoading(true);
         const { data } = await api(query, page);
-        const newImages = [...images, ...data.hits];
-        setImages(newImages);
+        setImages(prevState => [...prevState, ...data.hits]);
         setLoadMore(true);
         if (page >= Math.ceil(data.totalHits / 12)) {
           setLoadMore(false);
@@ -44,7 +38,6 @@ export const App = () => {
       }
     };
     fetchImages();
-    // eslint-disable-next-line
   }, [query, page]);
 
   const nextPage = () => {
